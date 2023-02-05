@@ -105,7 +105,7 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// println!("{}", cell_cell.borrow(&token).borrow(&token));
     /// 
     /// ```
-    pub fn borrow<U>(&self, t: &TokenWith<U, ID>) -> &T {
+    pub fn borrow<U>(&self, _: &TokenWith<U, ID>) -> &T {
         unsafe {self.inner.get().as_ref().unwrap_unchecked()}
     }
 
@@ -123,7 +123,7 @@ impl<T, const ID: usize> Cell<T, ID> {
     ///
     /// println!("{}", safe_ref.borrow(&token));
     /// ```
-    pub fn borrow_mut<U>(&self, t: &mut TokenWith<U, ID>) -> &mut T {
+    pub fn borrow_mut<U>(&self, _: &mut TokenWith<U, ID>) -> &mut T {
         unsafe {self.inner.get().as_mut().unwrap_unchecked()}
     }
 }
