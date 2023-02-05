@@ -22,7 +22,7 @@ that ensures `ID`s are unique. There may in the future be a way around this, but
 your breath!
 
 # Example
-```
+```rust
 use cell::*;
 let (token1, next) = first().unwrap().token();
 let (token2, _) = next.token();

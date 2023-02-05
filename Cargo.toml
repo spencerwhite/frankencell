@@ -2,6 +2,9 @@
 name = "frankencell"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "An alternative to `qcell` and `ghost-cell` that instead uses const generics"
+repository = "spencerwhite/frankencell"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
