@@ -17,6 +17,18 @@ impl<T, const ID: usize> TokenWith<T, ID> {
     pub const fn cell(&self, t: T) -> Cell<T, ID> {
         Cell::new(t)
     }
+
+    /// Getters and setters are necessary so an API user can't manually create a Token and must
+    /// instead use [Self::new()]
+    pub fn get(&self) -> &T {
+        &self.0
+    }
+
+    /// Getters and setters are necessary so an API user can't manually create a Token and must
+    /// instead use [Self::new()]
+    pub fn get_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
 }
 
 

@@ -1,7 +1,7 @@
 use cell::{first, cells::Cell};
 
 fn main() {
-    let (mut chars, next) = first().unwrap().token();
+    let (chars, next) = first().unwrap().token();
     let (nums, _) = next.token();
 
     let a = Cell::new('a');
@@ -28,11 +28,4 @@ fn main() {
 
     // c.borrow(&chars);
     // three.borrow(&nums);
-    
-
-    let a_mut = a.borrow_mut(&mut chars);
-
-    a.get();
-    
-    drop(a_mut);
 }

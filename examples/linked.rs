@@ -1,6 +1,4 @@
-use cell::cells::Cell;
-use cell::tokens::Token;
-use cell::TokenBuilder;
+use cell::Cell;
 use cell::first;
 
 #[derive(Debug)]
@@ -13,13 +11,13 @@ pub struct LinkedList<'l, T, const ID: usize> {
 fn main() {
     let ( mut token, _ ) = first().unwrap().token();
 
-    let list1 = token.cell(LinkedList {
+    let list1 = Cell::new(LinkedList {
         value: 1,
         l: None,
         r: None,
     });
 
-    let list2 = token.cell(LinkedList {
+    let list2 = Cell::new(LinkedList {
         value: 2,
         l: Some(&list1),
         r: None,
