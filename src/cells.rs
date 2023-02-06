@@ -16,12 +16,16 @@ use crate::tokens::TokenWith;
 ///     - `&self` + `&mut Token`
 ///     - `&mut self` (see [Cell::get_mut] for details)
 
+//TODO: More cell types. Currently, Token and Cell have a one-to-many relationship, but it may be
+//useful in the future to create a token/cell with a many-to-one relationship such as in
+//exaples/arena.rs
 #[derive(Default)]
 #[repr(transparent)]
 pub struct Cell<T, const ID: usize> {
     pub(crate) inner: UnsafeCell<T>,
 }
 
+//TODO: Figure out whether these are safe, then write a blurb about why they're safe.
 unsafe impl<T: Send, const ID: usize> Send for Cell<T, ID> {}
 unsafe impl<T: Send + Sync, const ID: usize> Sync for Cell<T, ID> {}
 

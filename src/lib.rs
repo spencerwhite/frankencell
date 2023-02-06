@@ -77,11 +77,13 @@ mod builder;
 pub mod cells;
 pub mod tokens;
 
+use std::sync::Once;
+
 pub use crate::builder::TokenBuilder;
 pub use crate::cells::*;
 pub use crate::tokens::*;
 
-static mut FIRST: Option<TokenBuilder<0>> = Some(unsafe { TokenBuilder::new() });
+static FIRST: Once = Once::new();
 
 /// Entry-point into the API that allows for safe creation of unique `Token`s.
 ///
@@ -89,6 +91,12 @@ static mut FIRST: Option<TokenBuilder<0>> = Some(unsafe { TokenBuilder::new() })
 /// assert!(first().is_some());
 /// assert!(first().is_none());
 /// ```
+// Implementation stolen lovingly from LegionMammal978
 pub fn first() -> Option<TokenBuilder<0>> {
-    unsafe { FIRST.take() }
+    let mut builder = None;
+    FIRST.call_once(|| {
+        builder = Some(unsafe { TokenBuilder::new() });
+    });
+
+    builder
 }
