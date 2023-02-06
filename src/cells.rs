@@ -1,4 +1,4 @@
-use std::{cell::UnsafeCell, fmt::{Display, Debug}};
+use std::{cell::UnsafeCell, fmt::Debug, any::Any};
 
 use crate::tokens::TokenWith;
 
@@ -25,15 +25,11 @@ pub struct Cell<T, const ID: usize> {
 unsafe impl<T: Send, const ID: usize> Send for Cell<T, ID> {}
 unsafe impl<T: Send + Sync, const ID: usize> Sync for Cell<T, ID> {}
 
-impl<T: Debug, const ID: usize> Debug for Cell<T, ID> {
+/// Very simple debugging function; if you want the inner value, instead use 
+/// ```println!("{:?}", cell.get(&token))```;
+impl<T: Debug + Any, const ID: usize> Debug for Cell<T, ID> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} @ {ID}", unsafe {self.get()})
-    }
-}
-
-impl<T: Display, const ID: usize> Display for Cell<T, ID> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", unsafe {self.get()})
+        write!(f, "Cell<{}, {}>", std::any::type_name::<T>(), ID)
     }
 }
 
