@@ -23,7 +23,7 @@ pub struct Cell<T, const ID: usize> {
 }
 
 unsafe impl<T: Send, const ID: usize> Send for Cell<T, ID> {}
-unsafe impl<T: Sync, const ID: usize> Sync for Cell<T, ID> {}
+unsafe impl<T: Send + Sync, const ID: usize> Sync for Cell<T, ID> {}
 
 impl<T: Debug, const ID: usize> Debug for Cell<T, ID> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
