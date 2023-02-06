@@ -41,8 +41,9 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// Creates a new cell that can only be accessed by a token with the same ID.
     ///
     /// # Example
-    /// ```Rust
-    /// let t = first().unwrap().token();
+    /// ```rust
+    /// # use frankencell::{first, Cell};
+    /// let (t, _) = first().unwrap().token();
     ///
     /// let a = Cell::new('a');
     ///
@@ -76,7 +77,8 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// passing the appropriate token to prove ownership could result in aliased mutability.
     ///
     /// ```
-    /// let mut token = first().unwrap().token();
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("Hello"));
     ///
     /// let cell_mut = cell.borrow_mut(&mut token);
@@ -97,8 +99,9 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// Use a `&Token` to prove no `&mut T` currently exists and recieve a `&T` in return
     /// 
     /// # Example
-    /// ```
-    /// let mut token = first().unwrap().token();
+    /// ```rust
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("ABC"));
     /// let cell_cell = Cell::new(&cell);
     ///
@@ -113,7 +116,8 @@ impl<T, const ID: usize> Cell<T, ID> {
     ///
     /// # Example
     /// ```
-    /// let mut token = first().unwrap().token();
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("Hello Worl"));
     ///
     /// let safe_ref = &cell;

@@ -1,7 +1,6 @@
-use cell::Cell;
-use cell::first;
+use frankencell::Cell;
+use frankencell::first;
 
-#[derive(Debug)]
 pub struct LinkedList<'l, T, const ID: usize> {
     pub value: T,
     pub l: Option<&'l Cell<LinkedList<'l, T, ID>, ID>>,

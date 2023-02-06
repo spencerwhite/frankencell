@@ -4,8 +4,8 @@ use crate::cells::Cell;
 
 /// A generic token that can store any data. See examples/arena.rs for an example of how this could
 /// be used.
-pub struct TokenWith<T, const ID: usize>(
-    T,
+pub struct TokenWith<T, const ID: usize> (
+    pub T,
     PhantomData<()>,
 );
 
