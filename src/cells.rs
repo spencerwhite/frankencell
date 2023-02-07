@@ -1,4 +1,4 @@
-use std::{cell::UnsafeCell, fmt::{Display, Debug}};
+use std::{cell::UnsafeCell, fmt::Debug, any::Any};
 
 use crate::tokens::TokenWith;
 
@@ -16,24 +16,24 @@ use crate::tokens::TokenWith;
 ///     - `&self` + `&mut Token`
 ///     - `&mut self` (see [Cell::get_mut] for details)
 
+//TODO: More cell types. Currently, Token and Cell have a one-to-many relationship, but it may be
+//useful in the future to create a token/cell with a many-to-one relationship such as in
+//exaples/arena.rs
 #[derive(Default)]
 #[repr(transparent)]
 pub struct Cell<T, const ID: usize> {
     pub(crate) inner: UnsafeCell<T>,
 }
 
+//TODO: Figure out whether these are safe, then write a blurb about why they're safe.
 unsafe impl<T: Send, const ID: usize> Send for Cell<T, ID> {}
-unsafe impl<T: Sync, const ID: usize> Sync for Cell<T, ID> {}
+unsafe impl<T: Send + Sync, const ID: usize> Sync for Cell<T, ID> {}
 
-impl<T: Debug, const ID: usize> Debug for Cell<T, ID> {
+/// Very simple debugging function; if you want the inner value, instead use 
+/// ```println!("{:?}", cell.get(&token))```;
+impl<T: Debug + Any, const ID: usize> Debug for Cell<T, ID> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} @ {ID}", unsafe {self.get()})
-    }
-}
-
-impl<T: Display, const ID: usize> Display for Cell<T, ID> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", unsafe {self.get()})
+        write!(f, "Cell<{}, {}>", std::any::type_name::<T>(), ID)
     }
 }
 
@@ -41,8 +41,9 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// Creates a new cell that can only be accessed by a token with the same ID.
     ///
     /// # Example
-    /// ```Rust
-    /// let t = first().unwrap().token();
+    /// ```rust
+    /// # use frankencell::{first, Cell};
+    /// let (t, _) = first().unwrap().token();
     ///
     /// let a = Cell::new('a');
     ///
@@ -76,7 +77,8 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// passing the appropriate token to prove ownership could result in aliased mutability.
     ///
     /// ```
-    /// let mut token = first().unwrap().token();
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("Hello"));
     ///
     /// let cell_mut = cell.borrow_mut(&mut token);
@@ -97,15 +99,16 @@ impl<T, const ID: usize> Cell<T, ID> {
     /// Use a `&Token` to prove no `&mut T` currently exists and recieve a `&T` in return
     /// 
     /// # Example
-    /// ```
-    /// let mut token = first().unwrap().token();
+    /// ```rust
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("ABC"));
     /// let cell_cell = Cell::new(&cell);
     ///
     /// println!("{}", cell_cell.borrow(&token).borrow(&token));
     /// 
     /// ```
-    pub fn borrow<U>(&self, t: &TokenWith<U, ID>) -> &T {
+    pub fn borrow<U>(&self, _: &TokenWith<U, ID>) -> &T {
         unsafe {self.inner.get().as_ref().unwrap_unchecked()}
     }
 
@@ -113,7 +116,8 @@ impl<T, const ID: usize> Cell<T, ID> {
     ///
     /// # Example
     /// ```
-    /// let mut token = first().unwrap().token();
+    /// # use frankencell::{first, Cell};
+    /// let (mut token, _) = first().unwrap().token();
     /// let cell = Cell::new(String::from("Hello Worl"));
     ///
     /// let safe_ref = &cell;
@@ -123,7 +127,7 @@ impl<T, const ID: usize> Cell<T, ID> {
     ///
     /// println!("{}", safe_ref.borrow(&token));
     /// ```
-    pub fn borrow_mut<U>(&self, t: &mut TokenWith<U, ID>) -> &mut T {
+    pub fn borrow_mut<U>(&self, _: &mut TokenWith<U, ID>) -> &mut T {
         unsafe {self.inner.get().as_mut().unwrap_unchecked()}
     }
 }

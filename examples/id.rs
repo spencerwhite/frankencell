@@ -1,4 +1,4 @@
-use cell::{first, cells::Cell};
+use frankencell::{first, cells::Cell};
 
 fn main() {
     let (chars, next) = first().unwrap().token();

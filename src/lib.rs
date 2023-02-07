@@ -24,19 +24,23 @@
 //! that ensures `ID`s are unique. There may in the future be a way around this, but don't hold
 //! your breath!
 //!
+//! Third, the use of explicit `usize` discriminants makes passing a `Cell` or `Token` to outside
+//! crates inherently unsafe. It is recommended to instead send raw values, e.g., with
+//! [Cell::into_inner()].
+//!
 //! # Example
-//! ```
-//! use cell::*;
+//! ```compile_fail
+//! use frankencell::*;
 //! let (token1, next) = first().unwrap().token();
 //! let (token2, _) = next.token();
 //!
-//! let a = token1.cell('a');
-//! let b = token2.cell('b');
+//! let a = Cell::new('a');
+//! let b = Cell::new('b');
 //!
 //! println!("{}", a.borrow(&token1));
 //! println!("{}", b.borrow(&token2));
 //!
-//! // The following fail to compile:
+//! // The following fails to compile:
 //! println!("{}", a.borrow(&token2));
 //! println!("{}", b.borrow(&token1));
 //! ```
@@ -46,7 +50,7 @@
 //! values on different calls. In order to generate unique IDs however, the following would have to
 //! be possible:
 //!
-//! ```rust
+//! ```compile_fail
 //! const fn inc() -> usize {
 //!     // Insert magic here
 //! }
@@ -66,6 +70,9 @@
 //! This *may* become possible when/if heap allocations are allowed in `const` contexts, but even
 //! then this pattern will likely never be officially endorsed by the Rust compiler.
 //!
+//! It may also be possible with macros when/if macros are allowed to keep a local state
+//! (rust-lang/rust issue 44034).
+//!
 //! # Should I use this? 
 //! Probably not. At the moment this is really more of a proof-of-concept. There's still a lot of
 //! work that needs to go into the compiler and, even then, this may not be a viable solution.
@@ -77,18 +84,72 @@ mod builder;
 pub mod cells;
 pub mod tokens;
 
+use std::sync::Once;
+
 pub use crate::builder::TokenBuilder;
 pub use crate::cells::*;
 pub use crate::tokens::*;
 
-static mut FIRST: Option<TokenBuilder<0>> = Some(unsafe { TokenBuilder::new() });
+static FIRST: Once = Once::new();
 
 /// Entry-point into the API that allows for safe creation of unique `Token`s.
 ///
-/// ```
+/// ```rust
+/// # use frankencell::first;
 /// assert!(first().is_some());
 /// assert!(first().is_none());
 /// ```
+// Implementation stolen lovingly from LegionMammal978
 pub fn first() -> Option<TokenBuilder<0>> {
-    unsafe { FIRST.take() }
+    let mut builder = None;
+    FIRST.call_once(|| {
+        builder = Some(unsafe { TokenBuilder::new() });
+    });
+
+    builder
+}
+
+/// Slightly more convenient way to initialize multiple tokens. Note that this currently only
+/// supports the basic [Token](crate::tokens::Token) type, and a [TokenWith] must be built manually
+/// 
+/// # Example
+/// init_tokens! { after first().unwrap();
+///     t1, t2, t3 then next
+/// }
+///
+/// let (with_usize, next) = next.token_with(0usize);
+#[macro_export]
+macro_rules! init_tokens {
+    (after $first:expr; $($name:ident),* then $next:ident) => {
+        let $next = $first;
+        $(
+            let ($name, $next) = $next.token();
+        )*
+    }
+}
+
+#[test]
+fn init_tokens_test() {
+    use crate::{TokenBuilder, init_tokens, Cell};
+
+    let first = unsafe {TokenBuilder::<0>::new()};
+    init_tokens! { after first;
+        t1,t2,t3 then _next
+    };
+
+    let cell1 = Cell::new(1);
+    let cell2 = Cell::new(2);
+    let cell3 = Cell::new(3);
+
+    println!("{}", cell1.borrow(&t1));
+    println!("{}", cell2.borrow(&t2));
+    println!("{}", cell3.borrow(&t3));
+}
+
+#[test]
+fn test_first() {
+    use crate::first;
+
+    assert!(first().is_some());
+    assert!(first().is_none());
 }

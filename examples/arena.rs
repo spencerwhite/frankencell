@@ -1,6 +1,6 @@
 use std::cell::UnsafeCell;
 
-use cell::{TokenWith, TokenBuilder, first};
+use frankencell::{TokenWith, first};
 
 // While the main crate provides one-to-many (token-to-cell) memory primitives, this example
 // provides many-to-one primitives. Namely, we will use many `TokenWith<usize>`s to address a
@@ -9,6 +9,8 @@ use cell::{TokenWith, TokenBuilder, first};
 // Generally these are the only two useful memory management models, since "one-to-one" describes
 // how Rust already works, and "many-to-many" will almost always allow for unsafe aliased
 // mutability.
+//
+// TODO: Add many-to-one versions of token/cell to make this more ergonomic
 
 /// A push-only arena. If an index exists, the object is guarenteed to still exist.
 pub struct Arena<T, const ID: usize> {
@@ -45,13 +47,13 @@ impl<T, const ID: usize> Arena<T, ID> {
     fn get(&self, index: &Index<ID>) -> &T {
         let inner: &Vec<T> = unsafe {self.inner.get().as_ref().unwrap()};
 
-        unsafe {inner.get_unchecked(*index.get())}
+        unsafe {inner.get_unchecked(index.0)}
     }
 
     fn get_mut(&self, index: &mut Index<ID>) -> &mut T {
         let inner: &mut Vec<T> = unsafe {self.inner.get().as_mut().unwrap()};
 
-        unsafe {inner.get_unchecked_mut(*index.get())}
+        unsafe {inner.get_unchecked_mut(index.0)}
     }
 }
 
@@ -66,8 +68,8 @@ fn main() {
     let b = chars.push('b');
     let c = chars.push('c');
 
-    let one = nums.push(1u32);
-    let two = nums.push(2);
+    let _one = nums.push(1u32);
+    let _two = nums.push(2);
 
     // This compiles:
     println!("{}", chars.get(&a));
