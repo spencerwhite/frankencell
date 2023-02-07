@@ -24,6 +24,10 @@
 //! that ensures `ID`s are unique. There may in the future be a way around this, but don't hold
 //! your breath!
 //!
+//! Third, the use of explicit `usize` discriminants makes passing a `Cell` or `Token` to outside
+//! crates inherently unsafe. It is recommended to instead send raw values, e.g., with
+//! [Cell::into_inner()].
+//!
 //! # Example
 //! ```compile_fail
 //! use frankencell::*;

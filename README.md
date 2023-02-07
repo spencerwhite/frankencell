@@ -21,19 +21,23 @@ Second, in order to provide a safe API, `Token`s must be built using a `TokenBui
 that ensures `ID`s are unique. There may in the future be a way around this, but don't hold
 your breath!
 
+Third, the use of explicit `usize` discriminants makes passing a `Cell` or `Token` to outside
+crates inherently unsafe. It is recommended to instead send raw values, e.g., with
+`Cell::into_inner()`.
+
 # Example
-```rust
-use cell::*;
+```compile_fail
+use frankencell::*;
 let (token1, next) = first().unwrap().token();
 let (token2, _) = next.token();
 
-let a = token1.cell('a');
-let b = token2.cell('b');
+let a = Cell::new('a');
+let b = Cell::new('b');
 
 println!("{}", a.borrow(&token1));
 println!("{}", b.borrow(&token2));
 
-// The following fail to compile:
+// The following fails to compile:
 println!("{}", a.borrow(&token2));
 println!("{}", b.borrow(&token1));
 ```
@@ -43,7 +47,7 @@ Currently because of how `const` works, it is impossible for a `const fn` to ret
 values on different calls. In order to generate unique IDs however, the following would have to
 be possible:
 
-```rust
+```compile_fail
 const fn inc() -> usize {
     // Insert magic here
 }
@@ -63,9 +67,13 @@ fn test_inc() {
 This *may* become possible when/if heap allocations are allowed in `const` contexts, but even
 then this pattern will likely never be officially endorsed by the Rust compiler.
 
+It may also be possible with macros when/if macros are allowed to keep a local state
+(rust-lang/rust issue 44034).
+
 # Should I use this? 
 Probably not. At the moment this is really more of a proof-of-concept. There's still a lot of
 work that needs to go into the compiler and, even then, this may not be a viable solution.
 
 If you're simply looking for something that's more ergonomic than `ghost-cell` and `qcell`, the
 `cell-family` crate seems to have a good approach.
+cell-family` crate seems to have a good approach.
